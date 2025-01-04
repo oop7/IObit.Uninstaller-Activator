@@ -1,6 +1,16 @@
 @echo off
 setlocal
 
+:: Self-elevation code
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    del "%temp%\getadmin.vbs"
+    exit /B
+)
+
 :: Set script directories
 set "SCRIPT_DIR=%~dp0"
 set "SRC_DIR=%SCRIPT_DIR%src\"
@@ -14,8 +24,9 @@ set "RESET=[0m"
 set "GREEN=[32m"
 set "RED=[31m"
 set "YELLOW=[33m"
+set "BLUE=[34m"
 
-:: Check for administrator rights
+:: Check for administrator rights (redundant check after self-elevation, but kept for safety)
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     :: If not admin, print a message and exit
@@ -57,15 +68,25 @@ echo.
 echo.
 echo.
 
+:: Display title section
+echo %BLUE%=============================================%RESET%
+echo %YELLOW%          IObit Uninstaller Activator         %RESET%
+echo %YELLOW%               Activator Script v1.2          %RESET%
+echo %BLUE%=============================================%RESET%
+echo.
+
 :: Display warning message about the default installation path
 echo %RED%Warning: The default installation path for the software is:%RESET%
 echo %YELLOW%%DEFAULT_DEST_DIR%%RESET%
 echo %RED%If the software is not installed in this directory, please ensure the path is correct before continuing.%RESET%
+echo.
 
-:: Prompt for user input
-echo %GREEN%1. Activate%RESET%
-echo %RED%2. Exit%RESET%
-set /p choice=Choose an option (1 or 2): 
+:: Prompt for user input with improved menu
+echo %GREEN%[1] Activate%RESET%
+echo %BLUE%[2] Check for Updates%RESET%
+echo %RED%[3] Exit%RESET%
+echo.
+set /p choice=%BLUE%Choose an option (1, 2, or 3): %RESET%
 
 :: Handle user choice
 if "%choice%"=="1" (
@@ -92,11 +113,16 @@ if "%choice%"=="1" (
     )
     pause
 ) else if "%choice%"=="2" (
-    echo Exiting...
+    echo %BLUE%Opening GitHub page for updates...%RESET%
+    start "" "https://github.com/oop7/IObit.Uninstaller-Activator"
+    pause
+) else if "%choice%"=="3" (
+    echo %RED%Exiting...%RESET%
     pause
     exit
 ) else (
-    echo %RED%Invalid choice. Please run the script again and choose 1 or 2.%RESET%
+    echo %RED%Invalid choice. Please run the script again and choose 1, 2, or 3.%RESET%
+    pause
 )
 
 :: Wait for user to press a key before closing
